@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBill - Simple. Elegant. Instant Invoicing.</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>QuickBill</h1>
+            <p class="tagline">Simple. Elegant. Instant Invoicing.</p>
+            <div class="theme-toggle">
+                <button id="themeToggle">🌙</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Input Form Section -->
+            <div class="form-section">
+                <h2>Invoice Details</h2>
+                <form id="invoiceForm">
+                    <div class="form-group">
+                        <label for="companyLogo">Company Logo (Optional)</label>
+                        <div class="logo-input-group">
+                            <input type="file" id="companyLogo" accept="image/*" class="logo-input">
+                            <button type="button" id="removeLogo" class="remove-logo" style="display: none;">Remove Logo</button>
+                        </div>
+                        <div class="logo-preview"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="invoice-notes" id="previewNotes" contenteditable="true"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="clientName">Client Name</label>
+                        <input type="text" id="clientName" placeholder="Enter client name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="clientAddress">Client Address (Optional)</label>
+                        <textarea id="clientAddress" placeholder="Enter client address" rows="3"></textarea>
+                    </div>
+
+
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="invoiceNumber">Invoice Number</label>
+                            <input type="text" id="invoiceNumber" placeholder="Enter invoice number">
+                            <button type="button" id="generateInvoiceNumber">Generate</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="invoiceDate">Date</label>
+                            <input type="date" id="invoiceDate" required>
+                        </div>
+                    </div>
+
+                    <div class="items-section">
+                        <h3>Items/Services</h3>
+                        <div id="itemsList">
+                            <div class="item-row">
+                                <input type="text" placeholder="Item name" class="item-name" required>
+                                <input type="number" placeholder="Qty" class="item-quantity" min="1" value="1" required>
+                                <input type="number" placeholder="Rate" class="item-rate" min="0" step="0.01" required>
+                                <span class="item-amount">$0.00</span>
+                                <button type="button" class="remove-item">×</button>
+                            </div>
+                        </div>
+                        <button type="button" id="addItem">+ Add Item</button>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="currency">Currency</label>
+                            <select id="currency">
+                                <option value="USD">USD ($)</option>
+                                <option value="INR">INR (₹)</option>
+                                <option value="EUR">EUR (€)</option>
+                                <option value="GBP">GBP (£)</option>
+                                <option value="CAD">CAD (C$)</option>
+                                <option value="AUD">AUD (A$)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="taxRate">Tax Rate (%)</label>
+                            <input type="number" id="taxRate" min="0" max="100" step="0.01" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="discount">Discount</label>
+                            <input type="number" id="discount" min="0" step="0.01" value="0">
+                        </div>
+                    </div>
+
+                    <div class="total-section">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Tax:</span>
+                            <span id="taxAmount">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Discount:</span>
+                            <span id="discountAmount">$0.00</span>
+                        </div>
+                        <div class="total-row final-total">
+                            <span>Total:</span>
+                            <span id="finalTotal">$0.00</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Invoice Preview Section -->
+            <div class="preview-section">
+                <h2>Invoice Preview</h2>
+                <div class="download-buttons">
+                    <button id="downloadPDF">📄 Download PDF</button>
+                    <button id="downloadJPG">🖼️ Download JPG</button>
+                    <button id="printInvoice">🖨️ Print</button>
+                </div>
+                
+                <div id="invoicePreview" class="invoice-preview">
+                    <div class="invoice-header">
+                        <div class="header-content">
+                            <div id="previewLogo" class="company-logo"></div>
+                            <h1 contenteditable="true">INVOICE</h1>
+                        </div>
+                        <div class="invoice-meta">
+                            <div class="invoice-number-display">Invoice #: <span id="previewInvoiceNumber" contenteditable="true">-</span></div>
+                            <div class="invoice-date-display">Date: <span id="previewDate" contenteditable="true">-</span></div>
+                        </div>
+                    </div>
+
+                    <div class="invoice-client">
+                        <h3>Bill To:</h3>
+                        <div id="previewClientName" contenteditable="true">Client Name</div>
+                        <div id="previewClientAddress" contenteditable="true" class="client-address"></div>
+                    </div>
+
+                    <table class="invoice-table">
+                        <thead>
+                            <tr>
+                                <th>Item/Service</th>
+                                <th>Qty</th>
+                                <th>Rate</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewItemsTable">
+                            <tr>
+                                <td colspan="4" class="no-items">No items added</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="invoice-totals">
+                        <div class="totals-row">
+                            <span>Subtotal:</span>
+                            <span id="previewSubtotal">$0.00</span>
+                        </div>
+                        <div class="totals-row">
+                            <span>Tax:</span>
+                            <span id="previewTax">$0.00</span>
+                        </div>
+                        <div class="totals-row">
+                            <span>Discount:</span>
+                            <span id="previewDiscount">$0.00</span>
+                        </div>
+                        <div class="totals-row total-final">
+                            <span>Total:</span>
+                            <span id="previewTotal">$0.00</span>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Made with ❤️ by Hirachand</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
